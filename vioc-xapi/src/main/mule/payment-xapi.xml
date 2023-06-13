@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    <http:listener-config name="payment-xapi-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="payment-xapi-config" api="resource::757ac8f8-12c6-4ae4-b9ee-f9c2290d9bbf:payment-xapi:1.0.2:raml:zip:payment-xapi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="3ed08819-3754-44b0-8b68-d174a11d38a0" >
+		<http:request-connection host="vioc-sapi-proxy.us-e2.cloudhub.io" />
+	</http:request-config>
+	<configuration doc:name="Configuration" doc:id="7cf78860-9780-4b25-a80b-5b5530a2b649" defaultErrorHandler-ref="global-error-main" />
+	<flow name="payment-xapi-main">
+        <http:listener config-ref="payment-xapi-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="payment-xapi-config" />
+		<error-handler ref="global-error-ApiKit" />
+    </flow>
+    <flow name="payment-xapi-console">
+        <http:listener config-ref="payment-xapi-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="payment-xapi-config" />
+		<error-handler ref="global-error-ApiKit" />
+    </flow>
+    <flow name="patch:\payments:payment-xapi-config">
+        <ee:transform>
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  msg: "failed operation",
+  code: 400,
+  eventId: "dbfhjsdb-hfb-do8ryt-876t7-5ty",
+  error: {
+    "type": "BAD_REQUEST",
+    title: "Invalid Request",
+    details: "The input contains invalid data"
+  }
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+    </flow>
+    <flow name="get:\payments\paymentTransactions:payment-xapi-config">
+		<flow-ref doc:name="payment-retrieveFlow" doc:id="a518a71d-b0e0-475c-b263-7a818a73ca57" name="payment-retrieveFlow"/>
+    </flow>
+    <flow name="post:\payments:application\json:payment-xapi-config">
+		<flow-ref doc:name="payment-insertFlow" doc:id="0e87e0bd-2761-4550-9e6a-de71709f8087" name="payment-insertFlow"/>
+    </flow>
+</mule>
