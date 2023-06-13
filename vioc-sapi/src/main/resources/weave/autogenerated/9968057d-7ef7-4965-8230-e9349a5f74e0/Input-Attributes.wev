@@ -1,0 +1,30 @@
+%dw 2.0
+
+type auto_9968057d_7ef7_4965_8230_e9349a5f74e0_Input_Attributes = {|
+  clientCertificate?: {|
+    publicKey?: {|  |}, 
+    "type"?: String, 
+    encoded?: Binary
+  |}, 
+  headers: {|
+    "x-vio-transactionId": String, 
+    clientId: String, 
+    clientSecret: String, 
+    Accept: String, 
+    "Accept-Language": String, 
+    "Content-Type": String
+  |}, 
+  listenerPath: String, 
+  method: String, 
+  queryParams: {|  |}, 
+  queryString: String, 
+  relativePath: String, 
+  remoteAddress: String, 
+  requestPath: String, 
+  requestUri: String, 
+  scheme: String, 
+  uriParams: {|  |}, 
+  version: String, 
+  localAddress: String
+|}
+

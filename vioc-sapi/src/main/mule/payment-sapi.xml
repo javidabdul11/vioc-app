@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    <http:listener-config name="payment-sapi-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="payment-sapi-config" api="resource::757ac8f8-12c6-4ae4-b9ee-f9c2290d9bbf:payment-sapi:1.0.2:raml:zip:payment-sapi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <configuration-properties doc:name="Configuration properties" doc:id="71d88230-6d6d-4c65-9653-7ed62eda1fa9" file="properties\dev.yaml" />
+	<configuration doc:name="Configuration" doc:id="d993d1a4-4889-4ae9-952c-14d70d487919" defaultErrorHandler-ref="global-error-main" />
+	<flow name="payment-sapi-main">
+        <http:listener config-ref="payment-sapi-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="payment-sapi-config" />
+		<error-handler ref="global-error-ApiKit" />
+    </flow>
+    <flow name="payment-sapi-console">
+        <http:listener config-ref="payment-sapi-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="payment-sapi-config" />
+		<error-handler ref="global-error-ApiKit" />
+    </flow>
+    <flow name="patch:\payments:payment-sapi-config">
+		<set-variable value='#[attributes.headers."x-vio-transactionId"]' doc:name="Store transactionId" doc:id="f1f3adbb-2003-4784-91aa-d26df289f69b" variableName="transactionId"/>
+		<set-variable value="#[attributes.queryParams.paymentReferenceId]" doc:name="Store paymentReferenceId" doc:id="a1c15dab-0ce9-4cf6-851d-8199ba165eaf" variableName="paymentRefId"/>
+		<flow-ref doc:name="record-payment-updationFlow" doc:id="0099b5c0-db7b-4968-873c-35efb20b99cb" name="record-payment-updationFlow"/>
+    </flow>
+    <flow name="get:\payments\paymentTransactions:payment-sapi-config">
+		<flow-ref doc:name="record-payment-retrieveFlow" doc:id="281efd2b-0d50-47a7-b170-05b5c864d154" name="record-payment-retrieveFlow"/>
+    </flow>
+    <flow name="post:\payments:application\json:payment-sapi-config">
+		<set-variable value='#[attributes.headers."x-vio-transactionId"]' doc:name="Store transactionID" doc:id="04e1dbce-527f-4c65-87e5-15edaec54d7c" variableName="transactionId"/>
+		<flow-ref doc:name="record-payment-insertFlow" doc:id="b53cc01e-fc5a-497a-a065-c55e2a400acd" name="record-payment-insertFlow"/>
+    </flow>
+</mule>

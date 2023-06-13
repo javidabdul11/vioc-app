@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="df22621f-1f8d-4daf-9b7e-502e34f828c4" >
+		<db:my-sql-connection host="${sql.host}" port="${sql.port}" user="${sql.user}" password="${sql.password}" database="${sql.db}" />
+	</db:config>
+	<flow name="record-payment-insertFlow" doc:id="9968057d-7ef7-4965-8230-e9349a5f74e0" >
+		<logger level="INFO" doc:name="Before DB insertion" doc:id="f4c24b2a-5d24-4864-a9ea-d531fe102946" message="Before DB insertion"/>
+		<db:insert doc:name="INSERTION  payment_transactions" doc:id="3ce48cb6-34c2-44d8-94a6-ca2ac75e56ed" config-ref="Database_Config">
+			<db:sql ><![CDATA[INSERT INTO payment_transactions VALUES (:paymentReferenceId,:status,:language,:transactionAmount,:gateway,:cardType,:serviceChargeRate,:netPremiumAmount)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"paymentReferenceId": payload.recordPaymentTransactionRequest.paymentReferenceId,
+	"status": payload.recordPaymentTransactionRequest.status,
+	"language": payload.recordPaymentTransactionRequest.language,
+	"transactionAmount": payload.recordPaymentTransactionRequest.transactionAmount,
+	"gateway": payload.recordPaymentTransactionRequest.gateway,
+	"cardType": payload.recordPaymentTransactionRequest.cardType,
+	"serviceChargeRate": payload.recordPaymentTransactionRequest.serviceChargeRate,
+	"netPremiumAmount": payload.recordPaymentTransactionRequest.netPremiumAmount
+}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Success Message" doc:id="dcf71c08-8657-48c7-b5a2-6db8b7903738" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "success",
+	"transactionId": vars.transactionId
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="After DB insertion" doc:id="f89597f3-79fe-4027-b584-e57535d4351f" message="After DB insertion"/>
+	</flow>
+</mule>

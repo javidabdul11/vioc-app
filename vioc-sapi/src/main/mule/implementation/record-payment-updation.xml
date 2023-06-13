@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="record-payment-updationFlow" doc:id="61a54b8c-3a9f-489a-962f-7147a5138a50" >
+		<logger level="INFO" doc:name="Before Update DB" doc:id="185c0660-2453-4a37-8d11-8a73a5b4c89f" />
+		<db:update doc:name="Update the Data" doc:id="0c48985e-2185-4c45-840c-ac93c7df6527" config-ref="Database_Config">
+			<db:sql ><![CDATA[UPDATE payment_transactions SET netPremiumAmount = '43988' WHERE paymentReferenceId =:paymentRefId]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	"paymentRefId": vars.paymentRefId
+}]]]></db:input-parameters>
+		</db:update>
+		<ee:transform doc:name="Success Message" doc:id="eea6b671-054a-4ff2-b95d-59dfe5c6936b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message": "success",
+	"transactionId": vars.transactionId
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="After DB Update" doc:id="14e4af6f-c4ca-467c-8a1c-dcfce908adc0" message="After DB Update"/>
+	</flow>
+</mule>

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="record-payment-retrieveFlow" doc:id="4356c82a-0ef4-4e08-882a-c82fdc6fe152" >
+		<logger level="INFO" doc:name="Before DB SELECT" doc:id="35b3968b-151d-4ffa-b3da-69f87bca15b9" message="Before DB SELECT"/>
+		<db:select doc:name="Display Payment Transactions" doc:id="f4610b31-01ae-4b77-891b-07f4ba1b921f" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM payment_transactions]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Retrieving Data from DB" doc:id="7db699cf-82c9-491c-b30a-b881a986f878" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="After DB SELECT" doc:id="1ce56e4d-2a05-4577-a463-3a5239389f33" message="After DB SELECT"/>
+	</flow>
+</mule>
