@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="record-payment-request-insertFlow" doc:id="f5d29c22-81cf-457d-88f4-488f1b62f2ab" >
+		<logger level="INFO" doc:name="Before Request VIOC_SAPI" doc:id="89bfad94-0227-4b89-94ba-6baedd0e74de" message="Before Request VIOC_SAPI"/>
+		<http:request method="POST" doc:name="Request: VIOC-SAPI" doc:id="c0474e9e-d750-4b5e-b216-ccd33756333b" config-ref="HTTP_Request_configuration" path="/payments" >
+			<http:headers ><![CDATA[#[output application/json
+---
+{
+	"Content-Type": attributes.headers."Content-Type",
+	"Accept-Language": attributes.headers."Accept-Language",
+	"x-vio-transactionId": attributes.headers."x-vio-transactionId",
+	"Accept": attributes.headers.Accept,
+	"clientId": attributes.headers.clientId,
+	"clientSecret": attributes.headers.clientSecret
+}]]]></http:headers>
+		</http:request>
+		<ee:transform doc:name="Response from VIOC SAPI" doc:id="80b815b2-5e85-47d1-8e31-b92e4807f97b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="After Request VIOC-SAPI" doc:id="9ac454a0-322f-4304-b786-dcb14d0b5807" message="After Request VIOC-SAPI"/>
+	</flow>
+</mule>

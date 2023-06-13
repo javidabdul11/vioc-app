@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd ">
+    <http:listener-config name="payment-papi-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+    <apikit:config name="payment-papi-config" api="resource::757ac8f8-12c6-4ae4-b9ee-f9c2290d9bbf:payment-papi:1.0.2:raml:zip:payment-papi.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="cb5da67d-9dca-4396-935c-4ca4484aeaec" >
+		<http:request-connection host="vioc-sapi-proxy.us-e2.cloudhub.io" />
+	</http:request-config>
+	<flow name="payment-papi-main">
+        <http:listener config-ref="payment-papi-httpListenerConfig" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="payment-papi-config" />
+		<error-handler ref="global-error-ApiKit" />
+    </flow>
+    <flow name="payment-papi-console">
+        <http:listener config-ref="payment-papi-httpListenerConfig" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="payment-papi-config" />
+		<error-handler ref="global-error-ApiKit" />
+    </flow>
+    <flow name="patch:\payments:payment-papi-config">
+		<flow-ref doc:name="record-payment-updateFlow" doc:id="d0ad3d27-aa28-449e-8c99-52d6904dd174" name="record-payment-updateFlow"/>
+    </flow>
+    <flow name="get:\payments\paymentTransactions:payment-papi-config">
+		<flow-ref doc:name="record-payment-request-retrieveFlow" doc:id="b1618e46-2cc3-44ce-b71e-7f4b1154ddd8" name="record-payment-request-retrieveFlow"/>
+    </flow>
+    <flow name="post:\payments:application\json:payment-papi-config">
+		<flow-ref doc:name="record-payment-request-insertFlow" doc:id="3636b39a-9147-4592-b981-141851f48f2f" name="record-payment-request-insertFlow"/>
+    </flow>
+</mule>

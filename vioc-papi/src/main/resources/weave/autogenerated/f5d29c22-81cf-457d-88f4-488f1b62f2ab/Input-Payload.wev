@@ -1,0 +1,15 @@
+%dw 2.0
+
+type auto_f5d29c22_81cf_457d_88f4_488f1b62f2ab_Input_Payload = {
+  recordPaymentTransactionRequest: {
+    serviceChargeRate: String, 
+    transactionAmount: String, 
+    cardType: String, 
+    language: String, 
+    gateway: String, 
+    netPremiumAmount: String, 
+    _?: Any
+  }, 
+  _?: Any
+}
+

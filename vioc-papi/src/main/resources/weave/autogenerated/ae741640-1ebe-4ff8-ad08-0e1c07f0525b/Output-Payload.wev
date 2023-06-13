@@ -1,0 +1,11 @@
+%dw 2.0
+
+type auto_ae741640_1ebe_4ff8_ad08_0e1c07f0525b_Output_Payload = {
+  recordPaymentTransactionResponse: {
+    message: String, 
+    transactionId: String, 
+    _?: Any
+  }, 
+  _?: Any
+}
+
